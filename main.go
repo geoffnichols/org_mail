@@ -7,6 +7,13 @@ import (
 	"log"
 )
 
+
+func find_reports_for(client, uid) {
+  manager_dn = "uid=" + uid + "ou=users,dc=puppetlabs,dc=com"
+  client.UserFilter="(manager=%s)"
+
+}
+
 func main() {
 
 	viper.BindEnv("LDAP_USERNAME")
@@ -25,13 +32,11 @@ func main() {
 		BindPassword: ldap_password,
 		UserFilter:   "(uid=%s)",
 		GroupFilter:  "(memberUid=%s)",
-		Attributes:   []string{"sn", "mail", "uid"},
+		Attributes:   []string{"sn", "mail", "uid", "manager"},
 	}
+
 	// It is the responsibility of the caller to close the connection
-
 	defer client.Close()
-
-	client.ServerName = "ldap.puppetlabs.com"
 
 	ok, user, err := client.Authenticate(ldap_username, ldap_password)
 	pretty.Println(user)
