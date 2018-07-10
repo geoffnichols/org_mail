@@ -6,17 +6,35 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/mup.v0/ldap"
 	"strconv"
+	//  "reflect"
 )
 
 //func is_manager()
 //func who_has_this_manager()
 //func find_root()
 
-/*func find_reports_for(client, uid) {
-  manager_dn = "uid=" + uid + "ou=users,dc=puppetlabs,dc=com"
-  client.UserFilter="(manager=%s)"
+func who_has_this_manager(config *ldap.Config, uid string) []string {
+	conn, err := ldap.Dial(config)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
+	search := &ldap.Search{
+		Filter: "(manager=" + manager_dn + ")",
+		Attrs:  []string{"sn", "mail", "uid", "manager"},
+	}
+	results, err := conn.Search(search)
+	if err != nil {
+		panic(err)
+	}
+	var dns []string
+	for _, item := range results {
+		dns = append(dns, item.DN)
+	}
+	return dns
 }
-*/
 
 func main() {
 
@@ -55,5 +73,8 @@ func main() {
 	for _, item := range results {
 		pretty.Println(item.DN)
 	}
+
+	//  fmt.Println(reflect.TypeOf(conn))
+	pretty.Println(who_has_this_manager(config, "erict"))
 
 }
