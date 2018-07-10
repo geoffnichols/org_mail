@@ -9,9 +9,30 @@ import (
 	//  "reflect"
 )
 
-//func is_manager()
-//func who_has_this_manager()
 //func find_root()
+
+
+func is_manager(config *ldap.Config, uid string ) bool {
+	conn, err := ldap.Dial(config)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
+	search := &ldap.Search{
+		Filter: "(manager=" + manager_dn + ")",
+		Attrs:  []string{"sn", "mail", "uid", "manager"},
+	}
+	results, err := conn.Search(search)
+	if err != nil {
+		panic(err)
+  }
+  if len(results) > 0 {
+    return true
+  }
+  return false
+}
 
 func who_has_this_manager(config *ldap.Config, uid string) []string {
 	conn, err := ldap.Dial(config)
@@ -76,5 +97,6 @@ func main() {
 
 	//  fmt.Println(reflect.TypeOf(conn))
 	pretty.Println(who_has_this_manager(config, "erict"))
+  pretty.Println(is_manager(config, "bradejr"))
 
 }
