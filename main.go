@@ -1,24 +1,17 @@
 package main
 
 import (
-	"fmt"
+	//	"fmt"
 	"github.com/kr/pretty"
 	"github.com/spf13/viper"
 	"gopkg.in/mup.v0/ldap"
-	"strconv"
+	//	"strconv"
 	//  "reflect"
 )
 
 //func find_root()
 
-
-func is_manager(config *ldap.Config, uid string ) bool {
-	conn, err := ldap.Dial(config)
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-
+func is_manager(conn ldap.Conn, uid string) bool {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
 	search := &ldap.Search{
 		Filter: "(manager=" + manager_dn + ")",
@@ -27,20 +20,14 @@ func is_manager(config *ldap.Config, uid string ) bool {
 	results, err := conn.Search(search)
 	if err != nil {
 		panic(err)
-  }
-  if len(results) > 0 {
-    return true
-  }
-  return false
+	}
+	if len(results) > 0 {
+		return true
+	}
+	return false
 }
 
-func who_has_this_manager(config *ldap.Config, uid string) []string {
-	conn, err := ldap.Dial(config)
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-
+func who_has_this_manager(conn ldap.Conn, uid string) []string {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
 	search := &ldap.Search{
 		Filter: "(manager=" + manager_dn + ")",
@@ -55,6 +42,9 @@ func who_has_this_manager(config *ldap.Config, uid string) []string {
 		dns = append(dns, item.DN)
 	}
 	return dns
+}
+
+func build_tree(conn *ldap.Conn, uid string) {
 }
 
 func main() {
@@ -73,11 +63,6 @@ func main() {
 		BindPass: ldap_password,
 	}
 
-	search := &ldap.Search{
-		Filter: "(manager=uid=stahnma,ou=users,dc=puppetlabs,dc=com)",
-		Attrs:  []string{"sn", "mail", "uid", "manager"},
-	}
-
 	conn, err := ldap.Dial(config)
 	if err != nil {
 		panic(err)
@@ -85,18 +70,9 @@ func main() {
 
 	defer conn.Close()
 
-	results, err := conn.Search(search)
-	//pretty.Println(results)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Found " + strconv.Itoa(len(results)) + " managers")
-	for _, item := range results {
-		pretty.Println(item.DN)
-	}
-
 	//  fmt.Println(reflect.TypeOf(conn))
-	pretty.Println(who_has_this_manager(config, "erict"))
-  pretty.Println(is_manager(config, "bradejr"))
+	pretty.Println(who_has_this_manager(conn, "erict"))
+	pretty.Println(is_manager(conn, "bradejr"))
+	build_tree(&conn, "stahnma")
 
 }
