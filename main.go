@@ -15,7 +15,7 @@ import (
 func is_manager(conn ldap.Conn, uid string) bool {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
 	search := &ldap.Search{
-		Filter: "(manager=" + manager_dn + ")",
+    Filter: "(&(manager=" + manager_dn + ")(!(employeeType=Intern))(!(objectclass=exPuppetPerson)))",
 		Attrs:  []string{"sn", "mail", "uid", "manager"},
 	}
 	results, err := conn.Search(search)
