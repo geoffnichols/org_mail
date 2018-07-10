@@ -1,18 +1,22 @@
 package main
 
 import (
-	"github.com/jtblin/go-ldap-client"
+	"fmt"
 	"github.com/kr/pretty"
 	"github.com/spf13/viper"
-	"log"
+	"gopkg.in/mup.v0/ldap"
+	"strconv"
 )
 
+//func is_manager()
+//func who_has_this_manager()
+//func find_root()
 
-func find_reports_for(client, uid) {
+/*func find_reports_for(client, uid) {
   manager_dn = "uid=" + uid + "ou=users,dc=puppetlabs,dc=com"
   client.UserFilter="(manager=%s)"
-
 }
+*/
 
 func main() {
 
@@ -21,31 +25,35 @@ func main() {
 	ldap_username := viper.Get("LDAP_USERNAME").(string)
 	ldap_password := viper.Get("LDAP_PASSWORD").(string)
 	bind_dn := "uid=" + ldap_username + ",ou=users,dc=puppetlabs,dc=com"
+	base_dn := "dc=puppetlabs,dc=com"
 
-	client := &ldap.LDAPClient{
-		Base:         "dc=puppetlabs,dc=com",
-		Host:         "ldap.puppetlabs.com",
-		ServerName:   "ldap.puppetlabs.com",
-		Port:         636,
-		UseSSL:       true,
-		BindDN:       bind_dn,
-		BindPassword: ldap_password,
-		UserFilter:   "(uid=%s)",
-		GroupFilter:  "(memberUid=%s)",
-		Attributes:   []string{"sn", "mail", "uid", "manager"},
+	config := &ldap.Config{
+		URL:      "ldaps://ldap.puppetlabs.com:636",
+		BaseDN:   base_dn,
+		BindDN:   bind_dn,
+		BindPass: ldap_password,
 	}
 
-	// It is the responsibility of the caller to close the connection
-	defer client.Close()
+	search := &ldap.Search{
+		Filter: "(manager=uid=stahnma,ou=users,dc=puppetlabs,dc=com)",
+		Attrs:  []string{"sn", "mail", "uid", "manager"},
+	}
 
-	ok, user, err := client.Authenticate(ldap_username, ldap_password)
-	pretty.Println(user)
+	conn, err := ldap.Dial(config)
 	if err != nil {
-		log.Fatalf("Error authenticating user %s: %+v", ldap_username, err)
+		panic(err)
 	}
-	if !ok {
-		log.Fatalf("Authenticating failed for user %s", ldap_username)
+
+	defer conn.Close()
+
+	results, err := conn.Search(search)
+	//pretty.Println(results)
+	if err != nil {
+		panic(err)
 	}
-	log.Printf("User: %+v", user)
+	fmt.Println("Found " + strconv.Itoa(len(results)) + " managers")
+	for _, item := range results {
+		pretty.Println(item.DN)
+	}
 
 }
