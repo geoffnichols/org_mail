@@ -2,18 +2,14 @@ package main
 
 import (
 	//	"github.com/kr/pretty"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/mup.v0/ldap"
 	"os"
-	//	"strconv"
-	//	"reflect"
-	"fmt"
 	"sort"
 	"strings"
 )
-
-//func find_root()
 
 func is_manager(conn ldap.Conn, uid string) bool {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
@@ -94,7 +90,7 @@ func build_entry(conn ldap.Conn, uid string) Ldapentry {
 	return entry
 }
 
-func peer_sort(peers []Ldapentry) []Ldapentry {
+func peer_sort_by_mail(peers []Ldapentry) []Ldapentry {
 	sort.Slice(peers[:], func(i, j int) bool {
 		return peers[i].mail < peers[j].mail
 	})
@@ -104,21 +100,15 @@ func peer_sort(peers []Ldapentry) []Ldapentry {
 // need to rework to a struct vs string array
 func build_tree(conn ldap.Conn, uid string) []Ldapentry {
 	log.Debug("In build tree, and uid string passed is " + uid)
-	//	var dn string
 	var entry Ldapentry
 	_, uid = shrink_dn(uid)
 	peers := []Ldapentry{}
 	if is_manager(conn, uid) {
 		log.Debug("In build tree, and uid " + uid + " is a manager")
 		for _, res := range who_has_this_manager(conn, uid) {
-			// evalute if any of these people are managers
-			//		pretty.Println(res)
-			//fmt.Println(reflect.TypeOf(res))
 			peers = append(peers, build_tree(conn, res)...)
-			//pretty.Println(build_tree(conn, res))
-			//pretty.Println(peers)
 		}
-		return peer_sort(peers)
+		return peer_sort_by_mail(peers)
 
 	} else {
 		entry = build_entry(conn, uid)
@@ -137,8 +127,11 @@ func main() {
 
 	viper.BindEnv("LDAP_USERNAME")
 	viper.BindEnv("LDAP_PASSWORD")
+	viper.SetDefault("MANAGER_ROOT", "stahnma")
+	viper.BindEnv("MANAGER_ROOT")
 	ldap_username := viper.Get("LDAP_USERNAME").(string)
 	ldap_password := viper.Get("LDAP_PASSWORD").(string)
+	ldap_manager := viper.Get("MANAGER_ROOT").(string)
 	bind_dn := "uid=" + ldap_username + ",ou=users,dc=puppetlabs,dc=com"
 	base_dn := "dc=puppetlabs,dc=com"
 
@@ -156,15 +149,7 @@ func main() {
 
 	defer conn.Close()
 
-	//  fmt.Println(reflect.TypeOf(conn))
-	//	pretty.Println(who_has_this_manager(conn, "erict"))
-	//	pretty.Println(is_manager(conn, "bradejr"))
-	reports := build_tree(conn, "stahnma")
-	//build_tree(conn, "bradejr")
-
-	//rsize := strconv.Itoa(len(reports))
-	//	fmt.Println("I found " + rsize + " reports")
-	// sort by mail?
+	reports := build_tree(conn, ldap_manager)
 	for _, v := range reports {
 		fmt.Println(v.mail)
 	}
