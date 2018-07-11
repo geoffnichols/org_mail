@@ -3,6 +3,12 @@
 A relatively simple program that by outputs mail addresses of everybody who
 works under MANAGER (as specified via environment variables).
 
+# Installation
+
+`go get github.com/puppetlabs/org_mail`
+
+You may want to add `$GOPATH:/bin` to your `$PATH`.
+
 
 # Usage
 
