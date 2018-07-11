@@ -1,7 +1,11 @@
 # org_mail
 
 A relatively simple program that by outputs mail addresses of everybody who
-works under `MANAGER` (as specified via environment variables).
+works under `MANAGER`.
+
+`MANAGER` defaults to stahnma, because I am that vain. The value of `MANAGER`
+is an LDAP uid (which at puppet is also the name before the `@` sign in a mail
+address.)
 
 # Installation
 
