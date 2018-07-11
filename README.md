@@ -9,9 +9,10 @@ address.)
 
 # Installation
 
-`go get github.com/puppetlabs/org_mail`
+`go get -u github.com/puppetlabs/org_mail`
 
-You may want to add `$GOPATH:/bin` to your `$PATH`.
+You may want to add `$GOPATH:/bin` to your `$PATH`. (Note if you haven't set
+`$GOPATH` it's `$HOME/go`)
 
 # Configuration
 
