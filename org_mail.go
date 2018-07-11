@@ -1,7 +1,7 @@
 package main
 
 import (
-//  "github.com/kr/pretty"
+	//  "github.com/kr/pretty"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -14,7 +14,8 @@ import (
 func is_manager(conn ldap.Conn, uid string) bool {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
 	search := &ldap.Search{
-		Filter: "(&(manager=" + manager_dn + ")(!(employeeType=Intern))(!(objectclass=exPuppetPerson)))",
+		//Filter: "(&(manager=" + manager_dn + ")(!(employeeType=Intern))(!(objectclass=exPuppetPerson)))",
+		Filter: "(&(manager=" + manager_dn + ")(!(objectclass=exPuppetPerson)))",
 		Attrs:  []string{"cn", "mail", "uid", "manager", "title"},
 	}
 	results, err := conn.Search(search)
@@ -133,10 +134,10 @@ func main() {
 	ldap_username := viper.Get("LDAP_USERNAME").(string)
 	ldap_password := viper.Get("LDAP_PASSWORD").(string)
 	ldap_manager := viper.Get("MANAGER").(string)
-  if (ldap_username == "" || ldap_password == "" ) {
-    fmt.Println("You must set LDAP_USERNAME and LDAP_PASSWORD.")
-    os.Exit(1)
-  }
+	if ldap_username == "" || ldap_password == "" {
+		fmt.Println("You must set LDAP_USERNAME and LDAP_PASSWORD.")
+		os.Exit(1)
+	}
 	bind_dn := "uid=" + ldap_username + ",ou=users,dc=puppetlabs,dc=com"
 	base_dn := "dc=puppetlabs,dc=com"
 
