@@ -4,7 +4,7 @@ import (
 	"github.com/kr/pretty"
 	"github.com/spf13/viper"
 	"gopkg.in/mup.v0/ldap"
-	//	"strconv"
+		"strconv"
 	//	"reflect"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -17,7 +17,7 @@ func is_manager(conn ldap.Conn, uid string) bool {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
 	search := &ldap.Search{
 		Filter: "(&(manager=" + manager_dn + ")(!(employeeType=Intern))(!(objectclass=exPuppetPerson)))",
-		Attrs:  []string{"sn", "mail", "uid", "manager"},
+		Attrs:  []string{"cn", "mail", "uid", "manager", "title"},
 	}
 	results, err := conn.Search(search)
 	if err != nil {
@@ -33,7 +33,7 @@ func who_has_this_manager(conn ldap.Conn, uid string) []string {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
 	search := &ldap.Search{
 		Filter: "(manager=" + manager_dn + ")",
-		Attrs:  []string{"sn", "mail", "uid", "manager"},
+		Attrs:  []string{"cn", "mail", "uid", "manager", "title"},
 	}
 	results, err := conn.Search(search)
 	if err != nil {
@@ -59,6 +59,15 @@ func shrink_dn(uid string) (string, string) {
 	}
 
 	return dn, uid
+}
+
+type Ldapentry struct {
+    dn string
+    uid string
+    mail string
+    manager string
+    title string
+    name string
 }
 
 // need to rework to a struct vs string array
@@ -118,6 +127,9 @@ func main() {
 	//  fmt.Println(reflect.TypeOf(conn))
 	//	pretty.Println(who_has_this_manager(conn, "erict"))
 	//	pretty.Println(is_manager(conn, "bradejr"))
-	pretty.Println(build_tree(conn, "stahnma"))
+	reports := build_tree(conn, "stahnma")
+  rsize := strconv.Itoa(len(reports))
+  pretty.Println("I found "  +rsize + " reports")
+  pretty.Print(reports)
 
 }
