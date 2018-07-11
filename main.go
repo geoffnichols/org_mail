@@ -1,7 +1,6 @@
 package main
 
 import (
-	//	"github.com/kr/pretty"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -116,7 +115,6 @@ func build_tree(conn ldap.Conn, uid string) []Ldapentry {
 		log.Debug("In build tree, and uid " + uid + " is *not* a manager")
 		return peers
 	}
-
 }
 
 func main() {
@@ -127,11 +125,11 @@ func main() {
 
 	viper.BindEnv("LDAP_USERNAME")
 	viper.BindEnv("LDAP_PASSWORD")
-	viper.SetDefault("MANAGER_ROOT", "stahnma")
-	viper.BindEnv("MANAGER_ROOT")
+	viper.SetDefault("MANAGER", "stahnma")
+	viper.BindEnv("MANAGER")
 	ldap_username := viper.Get("LDAP_USERNAME").(string)
 	ldap_password := viper.Get("LDAP_PASSWORD").(string)
-	ldap_manager := viper.Get("MANAGER_ROOT").(string)
+	ldap_manager := viper.Get("MANAGER").(string)
 	bind_dn := "uid=" + ldap_username + ",ou=users,dc=puppetlabs,dc=com"
 	base_dn := "dc=puppetlabs,dc=com"
 
@@ -153,5 +151,4 @@ func main() {
 	for _, v := range reports {
 		fmt.Println(v.mail)
 	}
-
 }

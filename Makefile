@@ -18,5 +18,4 @@ clean: ## Remove artiacts
 run: ## Run program
 	go run main.go
 
-
 .PHONY: help fmt clean
