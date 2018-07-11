@@ -1,13 +1,15 @@
 package main
 
 import (
-	"github.com/kr/pretty"
+	//	"github.com/kr/pretty"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/mup.v0/ldap"
-		"strconv"
-	//	"reflect"
-	log "github.com/sirupsen/logrus"
 	"os"
+	//	"strconv"
+	//	"reflect"
+	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -62,20 +64,50 @@ func shrink_dn(uid string) (string, string) {
 }
 
 type Ldapentry struct {
-    dn string
-    uid string
-    mail string
-    manager string
-    title string
-    name string
+	dn      string
+	uid     string
+	mail    string
+	manager string
+	title   string
+	cn      string
+}
+
+func build_entry(conn ldap.Conn, uid string) Ldapentry {
+	log.Debug("In build entry for " + uid)
+	var entry Ldapentry
+	search := &ldap.Search{
+		Filter: "(uid=" + uid + ")",
+		Attrs:  []string{"uid", "mail", "cn", "title", "manager"},
+	}
+	results, err := conn.Search(search)
+	if err != nil {
+		panic(err)
+	}
+	for _, item := range results {
+		entry.dn = item.DN
+		entry.manager = item.Value("manager")
+		entry.mail = item.Value("mail")
+		entry.uid = item.Value("uid")
+		entry.title = item.Value("title")
+		entry.cn = item.Value("cn")
+	}
+	return entry
+}
+
+func peer_sort(peers []Ldapentry) []Ldapentry {
+	sort.Slice(peers[:], func(i, j int) bool {
+		return peers[i].mail < peers[j].mail
+	})
+	return peers
 }
 
 // need to rework to a struct vs string array
-func build_tree(conn ldap.Conn, uid string) []string {
+func build_tree(conn ldap.Conn, uid string) []Ldapentry {
 	log.Debug("In build tree, and uid string passed is " + uid)
-	var dn string
-	dn, uid = shrink_dn(uid)
-	peers := []string{}
+	//	var dn string
+	var entry Ldapentry
+	_, uid = shrink_dn(uid)
+	peers := []Ldapentry{}
 	if is_manager(conn, uid) {
 		log.Debug("In build tree, and uid " + uid + " is a manager")
 		for _, res := range who_has_this_manager(conn, uid) {
@@ -86,14 +118,14 @@ func build_tree(conn ldap.Conn, uid string) []string {
 			//pretty.Println(build_tree(conn, res))
 			//pretty.Println(peers)
 		}
-		return peers
+		return peer_sort(peers)
 
 	} else {
-		peers = append(peers, dn)
+		entry = build_entry(conn, uid)
+		peers = append(peers, entry)
 		log.Debug("In build tree, and uid " + uid + " is *not* a manager")
 		return peers
 	}
-	return peers
 
 }
 
@@ -128,8 +160,13 @@ func main() {
 	//	pretty.Println(who_has_this_manager(conn, "erict"))
 	//	pretty.Println(is_manager(conn, "bradejr"))
 	reports := build_tree(conn, "stahnma")
-  rsize := strconv.Itoa(len(reports))
-  pretty.Println("I found "  +rsize + " reports")
-  pretty.Print(reports)
+	//build_tree(conn, "bradejr")
+
+	//rsize := strconv.Itoa(len(reports))
+	//	fmt.Println("I found " + rsize + " reports")
+	// sort by mail?
+	for _, v := range reports {
+		fmt.Println(v.mail)
+	}
 
 }
