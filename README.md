@@ -13,6 +13,11 @@ address.)
 
 You may want to add `$GOPATH:/bin` to your `$PATH`.
 
+# Configuration
+
+You should export `LDAP_USERNAME` and `LDAP_PASSWORD` with appropriate values
+for Puppet's LDAP servers.
+
 
 # Usage
 
