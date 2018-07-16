@@ -31,7 +31,7 @@ func is_manager(conn ldap.Conn, uid string) bool {
 func who_has_this_manager(conn ldap.Conn, uid string) []string {
 	manager_dn := "uid=" + uid + ",ou=users,dc=puppetlabs,dc=com"
 	search := &ldap.Search{
-		Filter: "(manager=" + manager_dn + ")",
+		Filter: "(&(manager=" + manager_dn + ")(!(objectclass=exPuppetPerson)))",
 		Attrs:  []string{"cn", "mail", "uid", "manager", "title"},
 	}
 	results, err := conn.Search(search)
