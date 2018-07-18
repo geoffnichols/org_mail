@@ -106,6 +106,7 @@ func build_tree(conn ldap.Conn, uid string) []Ldapentry {
 	peers := []Ldapentry{}
 	if is_manager(conn, uid) {
 		log.Debug("In build tree, and uid " + uid + " is a manager")
+    peers = append(peers, build_entry(conn, uid))
 		for _, res := range who_has_this_manager(conn, uid) {
 			peers = append(peers, build_tree(conn, res)...)
 		}
